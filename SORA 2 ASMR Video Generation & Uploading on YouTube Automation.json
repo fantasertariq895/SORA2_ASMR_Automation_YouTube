@@ -1,0 +1,3185 @@
+{
+  "name": "SORA 2 ASMR Video Generation & Uploading on YouTube Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M",
+          "mode": "list",
+          "cachedResultName": "Video Ideas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "create"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -304,
+        16
+      ],
+      "id": "89b41052-a71a-49b9-9eb4-c9d4c1de197c",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cjWuMgg6zQOj38Be",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Make a video with  {{ $json.Scenes }} scenes\n\nReference Video Prompt: \n{{ $json['Video Prompt'] }}\n\nAsmr Idea:\n{{ $json['Asmr Idea'] }}\n\nThe aspect ration is: {{ $json['Aspect Ratio'] }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=ROLE:\nYou are an expert ASMR prompt engineer. Your task is to read the reference video prompt and use the provided ASMR idea and update the subject in prompt. Don't change the prompt, just update the main element.\nAlways honor the User Instructions as a top priority.\n\nTASK:\nReturn a JSON array of [user-defined number] objects with the following format:\n\nScene\nnumber the scenes starting from 1.\n\nCRITICAL REQUIREMENT\nAbsolutely avoid sensitive words related to minors, violence, nudity, and anything that may flag sensitive content policies. Don’t make scene sensitive, keep it mild.\n\nThe structure of your output is as follows. With however many number of scenes that the user requires:\n\n[\n  {\n    \"scene\": 1,\n    \"video_prompt\": \"video prompt here\",\n    \"aspect_ratio\": \"16:9\"\n  },\n  {\n    \"scene\": 2,\n    \"video_prompt\": \"video prompt here\",\n    \"aspect_ratio\": \"16:9\"\n  },\n  {\n    \"scene\": 3,\n    \"video_prompt\": \"video prompt here\",\n    \"aspect_ratio\": \"16:9\"\n  }\n]\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        16
+      ],
+      "id": "a5feba00-5b4d-40b2-bea8-d70b9f1ae706",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -96,
+        -176
+      ],
+      "id": "11c00e07-6d81-4cba-b4c9-052a630d0bca",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "sFVE5Oz2KODuHoTt",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "sessions",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -176
+      ],
+      "id": "fcbbb4f8-473e-40c6-954b-b022391010ea",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        -176
+      ],
+      "id": "7befb969-ff52-4914-b2e6-5c220fd13b24",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"array\",\n  \"items\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"scene\": {\n        \"type\": \"integer\",\n        \"minimum\": 1,\n        \"description\": \"The scene number, starting from 1.\"\n      },\n      \"video_prompt\": {\n        \"type\": \"string\",\n        \"description\": \"The prompt for this scene, updated to include the ASMR idea.\"\n      },\n      \"aspect_ratio\": {\n        \"type\": \"string\",\n        \"pattern\": \"^[0-9]+:[0-9]+$\",\n        \"description\": \"The video aspect ratio for the scene (e.g., '16:9').\"\n      }\n    },\n    \"required\": [\"scene\", \"video_prompt\", \"aspect_ratio\"]\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        -176
+      ],
+      "id": "813de24c-f5e3-4fb6-953b-de1e21cffeb2",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        256,
+        16
+      ],
+      "id": "1b0356ad-e7be-4641-948a-431376ab4f1e",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sora-2-text-to-video\",\n  \"input\": {\n    \"prompt\": \"{{ $json.video_prompt.length > 800 ? $json.video_prompt.slice(0, 800) : $json.video_prompt }}\",\n    \"aspect_ratio\": \"{{ $json.aspect_ratio === '9:16' ? 'portrait' : ($json.aspect_ratio === '16:9' ? 'landscape' : $json.aspect_ratio) }}\",\n    \"quality\": \"hd\",\n    \"size\": \"high\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -416,
+        288
+      ],
+      "id": "b9f7b7d0-db9a-4176-ba75-438e7602dbb9",
+      "name": "Sora2 Video Create",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "gyHz1kLYMJA2JcWM",
+          "name": "KIEAI Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $json.data.recordId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        288
+      ],
+      "id": "8934c914-f981-4f9e-9062-9450260e1ebe",
+      "name": "Get Viddeo",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "gyHz1kLYMJA2JcWM",
+          "name": "KIEAI Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "939b8ecb-0d62-4dd2-ba76-6742b7e70058",
+              "name": "=sora_video",
+              "value": "={{ JSON.parse($json.data.resultJson).resultUrls[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        288
+      ],
+      "id": "0e4e3842-c9f9-4a28-a17e-4a229432ba68",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "sora_video"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        528
+      ],
+      "id": "49f6f91c-0fc0-4394-b799-c3c978d03145",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/ffmpeg-api/merge-videos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video_urls\": [{{ $json.sora_video.map(url => `\"${url}\"`) }}]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -128,
+        528
+      ],
+      "id": "a4b01e9b-2f1f-4e7e-a4a8-ed50e813ae86",
+      "name": "Merge Videos",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3Q02UqzoChAXOCzb",
+          "name": "FALAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/ffmpeg-api/requests/{{ $json.request_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -96,
+        752
+      ],
+      "id": "fe707747-aec8-4692-933d-fe14080f7090",
+      "name": "Get Final Video",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3Q02UqzoChAXOCzb",
+          "name": "FALAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M",
+          "mode": "list",
+          "cachedResultName": "Video Ideas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Video ID": "={{ $('Get row(s) in sheet').item.json['Video ID'] }}",
+            "Status": "done",
+            "Final Video": "={{ $json.video.url }}",
+            "Posting Status": "pending"
+          },
+          "matchingColumns": [
+            "Video ID"
+          ],
+          "schema": [
+            {
+              "id": "Video ID",
+              "displayName": "Video ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scenes",
+              "displayName": "Scenes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Asmr Idea",
+              "displayName": "Asmr Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Prompt",
+              "displayName": "Video Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Aspect Ratio",
+              "displayName": "Aspect Ratio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Final Video",
+              "displayName": "Final Video",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Title",
+              "displayName": "Video Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Video Description",
+              "displayName": "Video Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Video Tags",
+              "displayName": "Video Tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Posting Status",
+              "displayName": "Posting Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Hashtags",
+              "displayName": "Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        752
+      ],
+      "id": "1fe2c772-82ee-42c5-99c7-1e1dcf20015f",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cjWuMgg6zQOj38Be",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Sora 2 ASMR Video \n1. Generate Ideas",
+        "height": 256,
+        "width": 1120,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -656,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "ae42dcbc-be64-4d8a-a2f6-b63130962d8a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "2 - Create Videos",
+        "height": 240,
+        "width": 1120,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -656,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "fd5206bf-3ca8-4c6a-8894-4020a4128182",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "3 - Merge Videos",
+        "height": 240,
+        "width": 1120,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -656,
+        464
+      ],
+      "typeVersion": 1,
+      "id": "5fce955e-09c5-4ffc-b5a1-083c096e3683",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "4 - Get Final Video",
+        "height": 240,
+        "width": 1120,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -656,
+        720
+      ],
+      "typeVersion": 1,
+      "id": "f86879a8-2dba-4307-a70b-290ab2be26e9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "0 10,13,16 * * *"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M",
+          "mode": "list",
+          "cachedResultName": "Video Ideas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit#gid=0"
+        },
+        "event": "rowUpdate",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        -112
+      ],
+      "id": "0e6932b2-d11a-4fbb-b593-4b668fa4f942",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "MjZmhreDBSwzAShj",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1741cc7-3fab-472f-90bb-9d733346fde1",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "done",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b1f58e90-5f42-4309-9009-327b84814f4a",
+              "leftValue": "={{ $json['Posting Status'] }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        -112
+      ],
+      "id": "0ccdeb20-c3c7-493b-a27b-798b48f20cf8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Asmr Idea: {{ $json['Asmr Idea'] }}\nVideo Prompt: {{ $json['Video Prompt'] }}",
+        "options": {
+          "systemMessage": "=** PURPOSE **\nYou are a professional YouTube Shorts strategist. Your role is to take a given ASMR Idea and Video Prompt and generate optimized metadata — including a scroll-stopping title, a compelling description of not less than 200 words, relevant SEO tags, and trendy hashtags — designed to maximize reach, watch time, engagement, and click-through rate.\n\n** OUTPUT FORMAT **\nRespond with:\nTitle: [Your YouTube Title here]\nDescription: [Your YouTube Description here]\nTags: [comma-separated tags here]\nHashtags: [10 hashtags, space-separated]\n\n** STRATEGY & GUIDELINES **\n\n— TITLE —\n- Under 50 characters\n- Scroll-stopping\n- Emotional, curious, or contrarian\n- Written for Shorts/mobile viewers\n- No fluff — every word earns attention\n- Examples:\n  - “The Call That Came After Death…”\n  - “She Got a Voicemail From the Grave.”\n  - “Real Footage. Real Horror.”\n\n— DESCRIPTION —\n- Under 200 characters\n- Hook in the first sentence\n- Create curiosity or tension\n- Brief context or teaser about the short\n- No clickbait — just magnetic storytelling\n- Should make viewer want to watch and share\n\n— TAGS —\n- 5–7 keyword-rich tags, comma-separated\n- Reflect video topic, emotion, genre, and setting\n- Avoid repeating words already in title/description\n\n— HASHTAGS —\n- 10 hashtags\n- Include relevant categories (e.g., #horrorstories #foundfootage)\n- Include popular/viral tags for Shorts (e.g., #shorts, #viralshorts)\n\n** TONE & STYLE **\n- Conversational, confident, and suspenseful\n- No robotic or generic language\n- Use rhythm — vary sentence length\n- Tap into emotion: fear, mystery, awe, surprise\n- Respect the story — write like it’s true (even if fictional)\n\n** WHAT TO AVOID **\n- No asterisks, quotation marks, or labels in the output\n- Don’t include section headers like “Title:”\n- Do not mention “YouTube” or “Shorts” in the actual title or description\n- No hashtags in tags section\n\nREMEMBER the OUTPUT FORMAT SHOULD BE LIKE THIS:\n\n\nTitle: [Your YouTube Title here]\nDescription: [Your YouTube Description here]\nTags: [comma-separated tags here]\nHashtags: [10 hashtags, space-separated]"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        176
+      ],
+      "id": "96977a40-17cb-4265-b201-56c132244892",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        64
+      ],
+      "id": "797c0e61-2fe5-4839-8864-06c94c6730d4",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "sFVE5Oz2KODuHoTt",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawText = $json.output;\nconst lines = rawText.split('\\n');\n\nlet data = {\n  title: \"\",\n  description: \"\",\n  tags: \"\",\n  hashtags: \"\"\n};\n\nfor (const line of lines) {\n  const cleanLine = line.trim();\n  if (cleanLine.toLowerCase().startsWith(\"title:\")) {\n    data.title = cleanLine.replace(/^title:/i, \"\").trim();\n  }\n  if (cleanLine.toLowerCase().startsWith(\"description:\")) {\n    data.description = cleanLine.replace(/^description:/i, \"\").trim();\n  }\n  if (cleanLine.toLowerCase().startsWith(\"tags:\")) {\n    data.tags = cleanLine.replace(/^tags:/i, \"\").trim();\n  }\n  if (cleanLine.toLowerCase().startsWith(\"hashtags:\")) {\n    data.hashtags = cleanLine.replace(/^hashtags:/i, \"\").trim();\n  }\n}\n\nreturn [{ json: data }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        400
+      ],
+      "id": "9eaa8f8a-e6ee-4848-ab1e-c3490dd4b42b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M",
+          "mode": "list",
+          "cachedResultName": "Video Ideas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Video ID": "={{ $('Google Sheets Trigger').item.json['Video ID'] }}",
+            "Video Title": "={{ $json.title }}",
+            "Video Description": "={{ $json.description }}",
+            "Video Tags": "={{ $json.tags }}",
+            "Hashtags": "={{ $json.hashtags }}"
+          },
+          "matchingColumns": [
+            "Video ID"
+          ],
+          "schema": [
+            {
+              "id": "Video ID",
+              "displayName": "Video ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scenes",
+              "displayName": "Scenes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Asmr Idea",
+              "displayName": "Asmr Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Prompt",
+              "displayName": "Video Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Aspect Ratio",
+              "displayName": "Aspect Ratio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Final Video",
+              "displayName": "Final Video",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Title",
+              "displayName": "Video Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Description",
+              "displayName": "Video Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Tags",
+              "displayName": "Video Tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Posting Status",
+              "displayName": "Posting Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hashtags",
+              "displayName": "Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1648,
+        400
+      ],
+      "id": "ad25ebbd-a566-4d62-964f-240116f4cb39",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cjWuMgg6zQOj38Be",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Google Sheets Trigger').item.json['Final Video'] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1968,
+        400
+      ],
+      "id": "19f67fc8-9952-41c8-ac39-80f86d5180ef",
+      "name": "Download a Video"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('Update row in sheet1').item.json['Video Title'] }}",
+        "regionCode": "US",
+        "categoryId": "22",
+        "options": {
+          "description": "={{ $('Download a Video').item.json['Video Description'] }}",
+          "privacyStatus": "unlisted",
+          "tags": "={{ $('Download a Video').item.json['Video Tags'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        928
+      ],
+      "id": "a5ea6d9f-67b0-477a-9495-7151a1e93e4e",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "x1lam0dUMVbhHpiY",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{$binary.data.fileName}}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1suQxvG988QYBifoDTeOyIgRdjvs15ys-",
+          "mode": "list",
+          "cachedResultName": "ASMR Videos",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1suQxvG988QYBifoDTeOyIgRdjvs15ys-"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1328,
+        704
+      ],
+      "id": "f9343242-e20c-4ea1-be2e-d8e0efac9c67",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "P6QmFNbwHNJ5XJJs",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $json.name }}",
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1suQxvG988QYBifoDTeOyIgRdjvs15ys-",
+            "mode": "list",
+            "cachedResultName": "ASMR Videos",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1suQxvG988QYBifoDTeOyIgRdjvs15ys-"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1648,
+        704
+      ],
+      "id": "228d404e-5ba1-43c9-a19d-ae64760ba455",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "P6QmFNbwHNJ5XJJs",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1968,
+        704
+      ],
+      "id": "bd7631d0-42d4-47fa-83b5-5c881c13df73",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "P6QmFNbwHNJ5XJJs",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M",
+          "mode": "list",
+          "cachedResultName": "Video Ideas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HiIoaIIJKnzfnx1rDNGo7_-VK6XoGOI_kGerNrWk75M/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Video ID": "={{ $('Update row in sheet1').item.json['Video ID'] }}",
+            "Posting Status": "unlisted"
+          },
+          "matchingColumns": [
+            "Video ID"
+          ],
+          "schema": [
+            {
+              "id": "Video ID",
+              "displayName": "Video ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scenes",
+              "displayName": "Scenes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Asmr Idea",
+              "displayName": "Asmr Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Prompt",
+              "displayName": "Video Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Aspect Ratio",
+              "displayName": "Aspect Ratio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Final Video",
+              "displayName": "Final Video",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Title",
+              "displayName": "Video Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Description",
+              "displayName": "Video Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Tags",
+              "displayName": "Video Tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Posting Status",
+              "displayName": "Posting Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hashtags",
+              "displayName": "Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1536,
+        928
+      ],
+      "id": "2b2f7b17-c5c8-4780-835f-de9d5de794dc",
+      "name": "Update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cjWuMgg6zQOj38Be",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        928
+      ],
+      "id": "4906a6e1-cb1d-4b73-9cdb-6ab342120156",
+      "name": "Wait",
+      "webhookId": "3d31143d-5039-4ae2-9fcf-db3c21ae086d"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "update",
+        "videoId": "={{ $('Upload a video').item.json.uploadId }}",
+        "title": "={{ $('Update row in sheet1').item.json['Video Title'] }}",
+        "regionCode": "US",
+        "categoryId": "22",
+        "updateFields": {
+          "description": "={{ $('Update row in sheet1').item.json['Video Description'] }}",
+          "privacyStatus": "public",
+          "tags": "={{ $('Update row in sheet1').item.json['Video Tags'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        928
+      ],
+      "id": "7cac42d6-4c92-4cd2-84d7-557af513c1a8",
+      "name": "Update a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "x1lam0dUMVbhHpiY",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9,12,15 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -544,
+        0
+      ],
+      "id": "99c28c02-56f0-42a0-8108-8aef77f7676f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "YouTube Uploading Automation\n1 - Trigger & Data Retrieval",
+        "height": 240,
+        "width": 1120,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "d8cb70ee-ab21-4c70-8789-793901e098cf",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "2 - Filter & AI Processing",
+        "height": 240,
+        "width": 1120,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        96
+      ],
+      "typeVersion": 1,
+      "id": "996f877a-0deb-4e54-a9c7-0990fc7e3633",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "3 - Post AI Update & Video Retreival",
+        "height": 240,
+        "width": 1120,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "6adcaa23-bc7e-4e96-95e8-75546fb156fa",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "4 - File Upload & Management",
+        "height": 240,
+        "width": 1120,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        640
+      ],
+      "typeVersion": 1,
+      "id": "18a5a04b-dbf3-4179-b840-cc5da1276a26",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "5 - Publish & Finalize",
+        "height": 240,
+        "width": 1120,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        912
+      ],
+      "typeVersion": 1,
+      "id": "2d238ae2-1e45-4267-a82b-7d4bd228359b",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "amount": 240
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        288
+      ],
+      "id": "24858fcd-9b13-46be-8541-7858ccb7bfed",
+      "name": "Wait (240 Seconds)",
+      "webhookId": "7d3b830b-a6d1-4a68-b511-fbd4217ff4f2"
+    },
+    {
+      "parameters": {
+        "amount": 100
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        528
+      ],
+      "id": "90fc57c8-88cd-48bc-b26e-9d1c62c606e1",
+      "name": "Wait (100 Seconds)",
+      "webhookId": "1b1b688a-fbdd-4776-9952-f131d3989540"
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-11-07T16:03:12.980+01:00",
+          "Readable date": "November 7th 2025, 4:03:12 pm",
+          "Readable time": "4:03:12 pm",
+          "Day of week": "Friday",
+          "Year": "2025",
+          "Month": "November",
+          "Day of month": "07",
+          "Hour": "16",
+          "Minute": "03",
+          "Second": "12",
+          "Timezone": "Europe/Berlin (UTC+01:00)"
+        }
+      }
+    ],
+    "Google Sheets Trigger": [
+      {
+        "json": {
+          "Video ID": "Video 1",
+          "Status": "done",
+          "Scenes": 3,
+          "Asmr Idea": "Make different dishes using the same setup",
+          "Video Prompt": "First-person POV macro-cinematic cooking scene titled “Micro Chef.”\nA real human uses miniature utensils and tiny real ingredients on a small kitchen set the size of a table. Ultra-realistic shallow-depth macro camera view — steam, sizzling oil, and glowing stove reflections. Real hands delicately chop a micro carrot, fry a single egg in a coin-sized pan, and plate a thumb-sized meal on a tiny dish. Natural lighting, soft ambient kitchen sounds, ASMR-style realism, handheld micro-lens movement, cinematic depth, cozy miniature environment, no narration — just immersive first-person cooking.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "https://v3b.fal.media/files/b/monkey/fLwsGvMs08UkTBJEYwQdX_merged_video.mp4",
+          "Video Title": "Tiny Kitchen, Giant Flavor",
+          "Video Description": "Watch a real chef whip tiny dishes on a miniature stove—micro carrots, coin-sized pans, and sizzling oil soundscapes. Dive into cozy, ultra-real ASMR cooking magic.",
+          "Video Tags": "miniature cooking, macro ASMR, tiny food art, micro kitchen, realistic cooking sounds, cinematic macro cooking, micro chef",
+          "Posting Status": "unlisted",
+          "Hashtags": "#microchef #asmrfood #minicooking #tinyfoodart #macrocooking #soothingvideos #cozykitchen #shortsvideos #viralshorts #foodasmr"
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 2",
+          "Status": "done",
+          "Scenes": 3,
+          "Asmr Idea": "Brew different types of coffee using the same tiny café setup — espresso, cappuccino, pour-over, and iced latte — each captured with unique steam, pour, and aroma textures.",
+          "Video Prompt": "First-person POV macro-cinematic coffee-making scene titled “Tiny Barista.”\nA real human brews a perfect espresso using miniature coffee tools — a thimble-sized moka pot hisses on a match-flame stove. A droplet of crema swirls into a coin-sized cup. Steam curls and condensation glows in warm morning light. Macro depth of field, slow handheld camera, and soft ASMR sounds of grinding, pouring, and tapping. Every movement is precise and delicate, creating a calm, cozy miniature café vibe. No narration — just sensory realism and cinematic micro-world atmosphere.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "https://v3b.fal.media/files/b/penguin/eHqnLyNq971swzTCNtBbl_merged_video.mp4",
+          "Video Title": "Tiny Café, Giant Coffee Magic",
+          "Video Description": "Step into a tiny café where espresso, cappuccino, pour-over, and iced latte come alive in miniature. Hear every hiss, swirl, and drip as coffee transforms into cozy art. Feel the steam, see the crema dance—welcome to a micro coffee world you never knew existed.",
+          "Video Tags": "miniature coffee brewing, macro coffee art, tiny café setup, cinematic ASMR, espresso close-up, slow coffee making, sensory coffee experience",
+          "Posting Status": "unlisted",
+          "Hashtags": "#ASMR #CoffeeArt #MiniatureWorld #EspressoMagic #MacroShots #CozyVibes #CoffeeLovers #SlowMo #RelaxingSounds #TinyBarista"
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 3",
+          "Status": "done",
+          "Scenes": 3,
+          "Asmr Idea": "Paint different miniature artworks on the same tiny easel — landscapes, portraits, and abstract color swirls — focusing on the brush sounds, paint mixing, and canvas texture each time.",
+          "Video Prompt": "First-person POV macro-cinematic art scene titled “Pocket Painter.”\nA miniature easel holds a tiny canvas no bigger than a coin. The artist’s real fingers carefully dip a micro brush into droplets of vibrant paint. Pigment mixes like liquid jewels under macro focus. You can hear faint brush strokes, canvas texture, and soft ambient studio sounds. A shallow focus reveals reflections of color in the wet paint, captured through handheld lens breathing. Natural light fades through the window — pure ASMR painting immersion in a tiny creative world.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "https://v3b.fal.media/files/b/panda/6EZ5oPdf13W9nfTtpRvXY_merged_video.mp4",
+          "Video Title": "Tiny Art, Massive Calm",
+          "Video Description": "Step into a pocket-sized world where every brushstroke whispers. Watch as miniature landscapes, portraits, and colors come alive with hypnotic paint sounds and delicate touches. Relax, listen close—the magic is in the details.",
+          "Video Tags": "miniature painting, ASMR art, tiny easel, paint mixing sounds, macro painting, relaxing art video, micro brush strokes",
+          "Posting Status": "unlisted",
+          "Hashtags": "#ASMR #MiniatureArt #PaintSounds #MacroArt #PocketPainter #RelaxingASMR #ArtTherapy #Shorts #ViralArt #CalmingSounds"
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 4",
+          "Status": "done",
+          "Scenes": 3,
+          "Asmr Idea": "Bake different miniature pastries using the same micro oven setup — cupcakes, cookies, croissants, and pies — with unique batter sounds, oven glow, and frosting details for each episode.",
+          "Video Prompt": "First-person POV macro-cinematic baking scene titled “Micro Baker.”\nTiny bowls of flour, sugar, and butter rest on a miniature wooden counter. A thimble whisk beats a droplet of batter; the oven is no larger than a lunchbox. Steam and golden crumbs emerge as a coin-sized cupcake rises perfectly. Macro slow-motion captures melting butter and sugar sparkle. Soft crackling, warm kitchen light, and subtle lens drift — all evoke a sense of cozy handmade precision in a miniature pastry world, filmed like a tactile, ASMR fairytale.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "https://v3b.fal.media/files/b/penguin/7-ruD6I6VwcNJx_QGELuC_merged_video.mp4",
+          "Video Title": "Tiny Oven, Giant Flavors",
+          "Video Description": "Step into a mini kitchen where tiny pastries come alive. Watch golden cupcakes rise, butter melt, and sugar sparkle in cozy, close-up detail. Feel the comforting crackle.",
+          "Video Tags": "miniature baking, micro pastries, ASMR baking, close-up food, slow motion cooking, tiny desserts, cozy kitchen sounds",
+          "Posting Status": "unlisted",
+          "Hashtags": "#ASMR #MiniatureCooking #BakingSounds #CozyVibes #TinyPastries #MicroOven #FoodASMR #SlowMo #RelaxingSounds #Shorts"
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 5",
+          "Status": "done",
+          "Scenes": 3,
+          "Asmr Idea": "Craft authentic miniature jewelry pieces—from tiny gemstone rings to intricate beadwork necklaces—illustrating the meticulous artisan skills in a macro workspace designed for sensory immersion.",
+          "Video Prompt": "Experience an intimate, first-person view as a master artisan forges, polishes, and assembles thumb-sized rings, bracelets, and necklaces on a micro jewelers' workbench. Every frame showcases the remarkable detail of real fingers precisely setting tiny precious stones and threading micro beads under the lens. Hear the gentle clink of miniature metal, the soft brush of polishing cloth, and focused ambient studio sounds. Silky reflections and ultra-close shots capture the tactile process as hands delicately solder and buff the jewelry pieces, all under natural warm lighting. The scene employs a shallow depth for cinematic realism, with subtle camera movements enhancing the immersive quality of the jewelry crafting session.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "https://v3b.fal.media/files/b/zebra/8X8SFs8IOQ6YKXJjdFKdV_merged_video.mp4",
+          "Video Title": "Tiny Jewels, Giant Craft",
+          "Video Description": "Watch tiny gemstone rings and delicate bead necklaces come to life under masterful hands. Hear the soft clinks and gentle brushes as miniature jewelry is crafted with absolute precision in a mesmerizing close-up. This is artisanal skill you can almost feel.",
+          "Video Tags": "miniature jewelry making, gemstone rings close-up, micro beadwork, artisan craftsmanship, tactile ASMR, jewelry soldering sounds, macro artistry",
+          "Posting Status": "unlisted",
+          "Hashtags": "#ASMR #MiniatureJewelry #CraftingMagic #ArtisanSkills #MacroASMR #JewelryMaking #TinyArt #SatisfyingSounds #HandmadeJewelry #RelaxingASMR"
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 6",
+          "Status": "done",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare a diverse array of ultra-realistic, bite-sized sushi rolls in a meticulously crafted miniature kitchen using authentic micro utensils and ingredients",
+          "Video Prompt": "Step into a cinematic cooking scene set on a tabletop-sized sushi bar, where a real chef’s hands expertly mold thumb-sized rice portions, slice minuscule pieces of fish, and roll tiny seaweed wraps with immaculate precision. Macro camera angles reveal grains of rice being shaped, delicate knife work, and the careful assembly of coin-sized sushi. Ambient ambient kitchen noises—the whisper of a sharp knife gliding through nori, the sticky press of rice, and the subtle tapping of micro bowls—layer in next to the soft soundscape of gentle water boiling and bamboo mats shifting. Natural lighting casts authentic shadows while slow handheld camera movements highlight the immersive tactile realism. There’s no narration, only the sensory symphony of sushi-making in a cozy, hyper-detailed miniature world.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "https://v3b.fal.media/files/b/penguin/UagTLuY00Da9eQ9pUCYXC_merged_video.mp4",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "pending",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 7",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Mix, pour, and garnish a series of ultra-detailed miniature cocktails in a tiny bar setting, focusing on the artistry and tactile ASMR triggers of drink creation.",
+          "Video Prompt": "Enter a stylish micro-bar environment, where skilled hands handle thimble-sized cocktail shakers, tiny spoons, and micro glasses. Watch as droplets of colored liquid swirl, blend, and layer within coin-sized containers. The video captures the delicate sonic textures: ice cubes clinking, fizzy pours filling miniature tumblers, and faint garnish placing sounds. Subtle macro focus details amplify each action—lime zest sprinkles, syrup swirl, sugar rim tap—while cozy bar ambiance and the warm glow of ambient light surround the scene. The first-person view enhances the connection, and cinematic editing ensures every movement feels intentional and sensory-focused. Entirely free of narration, the scene immerses viewers in the soothing, precise process of mixing and serving four different micro cocktails in a miniature speakeasy.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 8",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Carve expressive miniature wooden sculptures—tiny animals and figures—using authentic micro-carving tools, spotlighting fine tactile and acoustic woodworking delights.",
+          "Video Prompt": "Experience the journey of turning a matchstick-sized wood block into a tiny masterpiece, guided by skilled hands wielding a set of authentic micro chisels and carving blades. Each frame is rich with detail: wood shavings curl in slow motion, subtle laminate textures come alive, and gentle carving tool taps resonate crisply. The cinematic macro lens reveals the artistry in finger positioning, intricate finishing, and painting of the completed sculpture. Layered sound design captures the sharp scrape, gentle sanding, and soft polish, while workshop ambient noises—distant humming, muffled footsteps—add to the realism. Warm studio light, shallow focus, and moving camera angles envelop the scene in a cozy, artisanal atmosphere ideal for immersive ASMR.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 9",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Shape, spin, and paint miniature clay pottery—coin-sized vases and bowls—using a detailed tabletop wheel in a macro-focused, tactile ASMR setup.",
+          "Video Prompt": "Immerse in the tactile world of pottery creation as real fingers gently press, spin, and mold drops of clay on a tiny wheel set on a handcrafted studio desk. Macro cinematic shots highlight the subtle movements of hands working with damp clay, slow wheel rotations, and delicate sculpting. The soundscape is layered: each squish, finger glide, and faint wheel hum is captured in crisp detail, complemented by the rhythmic tapping as micro bowls and vases form. Painting follows, with soft brush swishes and intricate color mixing. Natural light streams through a miniature studio window, enhancing the soft focus and real textures. The scene unfolds without dialogue, allowing viewers to soak in every immersive ASMR cue—visual and auditory—in a serene miniature pottery environment.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 10",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Style intricate hairdos on thumb-sized mannequin heads—miniature braids, buns, and waves—using authentic micro combs and scissors in a dedicated salon vignette.",
+          "Video Prompt": "Witness the delicate art of hairstyling performed on micro mannequin heads, where real hands wield tiny combs, scissors, and elastics. Ultra-close lens work showcases the careful detangling, snipping, and arranging of doll-scale hair into elaborate styles, each frame highlighting strand-by-strand precision. Whisper-soft brushing, gentle tapping of scissors, and the subtle snap of elastics contribute to a rich soundscape, supported by tranquil salon background noise—a faint hum of dryers, soft footsteps. Warm lighting illuminates the scene for a cozy, cinematic salon vibe. Fluid camera movements and macro focus deliver an immersive sensory experience, absent of any narration, relying purely on the tactile sounds and visuals associated with professional micro hairstyling.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 11",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Sew and stuff miniature pillows in an authentic dollhouse setting, showcasing the exacting craft and layered ASMR triggers of hand sewing and fabric work.",
+          "Video Prompt": "Enter a vintage dollhouse sewing room, where real fingers methodically pull micro thread through a tiny needle to stitch two scraps of soft cloth together. Satisfying auditory details—crisp needle taps, gentle fabric folding, and the slow sliding of thread—blend into the ambient hum of an old sewing machine and distant clock ticks. Macro shots highlight each careful stitch, close fabric textures, and precise stuffing movements as the pillow comes to life. The combination of tactile handwork, natural daylight, and focused camera breathing creates a deeply immersive scene. There’s no commentary, only the sensory beauty of micro sewing, vintage tools, and dollhouse atmospherics, captured as a relaxing, slow-paced ASMR ritual.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 12",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble a detailed miniature terrarium using authentic moss, micro stones, and tiny glass vessels, dramatizing the gentle hand movements and layered acoustic cues.",
+          "Video Prompt": "Watch as skilled hands meticulously layer rich soil, arrange vibrant moss, and place miniature stones into a thimble-sized glass terrarium. Every movement is recorded with macro cinematic detail: the gentle rustle of moss, crisp placement of stones, and the subtle spritzing of water atomizer. Ambient sounds—pot taps, substrate pour, and glass clinks—contribute to an earthy, serene background that aligns perfectly with natural lighting and slow camera focus pulls. As the completed terrarium glows under a shaft of studio sunlight, viewers are treated to a symphony of organic visuals and sounds, all arranged without narration for pure ASMR immersion in a tranquil, tiny botanical space.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 13",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Decorate ultra-realistic, thumb-sized cupcakes for a doll party, focusing on every aspect—from batter texture to precise icing work and sprinkles—in a miniature bakery setup.",
+          "Video Prompt": "In a charming mini bakery, real hands are seen mixing droplet-sized batter, scooping into coin-sized cupcake molds, and baking in a hand-built oven. Macro lens detail brings viewers inside the oven as the batter rises and golden crumbs emerge. The next scenes follow careful icing swirl, sprinkle placement, and plating on a thumb-sized tray. Ambient bakery noises—whisk taps, oven door creak, sugar sifting—layer beneath the soft chatter of a cozy patisserie. Macro visuals capture glossy icing curves, sprinkle arrangements, and precise handwork as the cupcakes find their final place on a pastry stand. There’s no narration, allowing delicate sounds and tactile actions to provide supreme ASMR engagement for bakery lovers.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 14",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Paint and polish a collection of micro-scale toy cars, spotlighting the painting, drying, and detailing process in a tactile, sound-rich workbench scene.",
+          "Video Prompt": "Step onto a mechanic’s miniature workbench, where authentic fingers grip tiny brushes and carefully airbrush a set of coin-sized toy cars with vibrant colors. Macro-closeups track each pass of paint, the textural differences between matte and gloss, and the sound of drying heat. Later scenes show delicate polish, buff, and wheel detailing, with accompanying metallic clinks and cloth swipe sounds. Rich motor shop ambiance enhances the tactile process—distant tool hums and surface taps. The scene uses controlled camera drift and cinematic shallow focus, creating an immersive feeling of being inside the world of micro automotive detailing. No narration; just pure, layered auditory and visual ASMR from start to finish.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 15",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble a miniature breakfast plate featuring an array of tiny, carefully prepared breakfast foods such as pancakes, bacon strips, and fruit slices, emphasizing tactile hand movements and natural kitchen sounds.",
+          "Video Prompt": "Capture the beauty of a miniature morning breakfast scene where skilled hands arrange bite-sized pancakes, crisp bacon, and delicate fruit on a thimble-sized plate. Macro shots reveal the sizzling sound of micro bacon, the soft syrup drizzle, and the careful stacking of pancakes, all under warm kitchen lighting. The sound design incorporates sizzling, gentle syrup drips, and the soft clink of miniature utensils while the camera slowly pans to reveal each expertly placed element. There’s no speech, only the visual and auditory serenity of a perfectly crafted tiny breakfast made in a cozy mini kitchen setting.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 16",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Fold accurate miniature origami figures including cranes, flowers, and geometric shapes with precise paper creasing, finger taps, and gentle unfolding sounds in a calm studio environment.",
+          "Video Prompt": "Follow close-up shots of expert hands folding micro paper into delicate origami cranes, tulips, and diamonds. Each fold is accompanied by the crisp sound of the paper creasing and smooth finger taps. Macro camera work captures the texture of the paper and the subtle movement as the tiny models take shape. The scene is bathed in soft natural light with a zen-like soundscape of quiet paper manipulation and ambient silence to maximize ASMR impact. There is no narration, allowing viewers to lose themselves in the meditative flow of miniature paper art creation.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 17",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Mix and pour visually appealing miniature mocktails and fruit punches in an elegant micro bar setting, highlighting detailed pouring sounds, ice clinking, and garnish placement with realistic lighting effects.",
+          "Video Prompt": "Step into a stylish miniature bar where glistening ice cubes clink inside micro glasses filled with vibrant fruit punches and mocktails. Hands artfully mix, pour, and garnish coin-sized drinks with tiny fruit slices and cocktail umbrellas under soft, warm lighting. The video captures the satisfying fizzing of soda, delicate liquid flow, and crisp clatter on tiny utensils. The macro cinematography emphasizes every droplet and shading change, immersing viewers in the sensory relaxation of cocktail preparation. No narration, just captivating audio-visual ASMR focused on liquid dynamics and bar ambiance.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 18",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Sculpt lifelike miniature animal figurines from soft clay, emphasizing tactile molding, tool scraping sounds, and slow detailed painting for realistic texture and color in a workshop setting.",
+          "Video Prompt": "Immerse in the detailed process of sculpting micro animal figurines, including tiny birds, cats, and rabbits, from soft clay. The camera captures every finger press, tool scrape, and delicate form shaping, emphasizing the textures of clay as it moves and molds. Soft scraping and brushing sounds fill the workshop atmosphere while the painter carefully applies tiny layers of color to bring each creature to life. Natural light from a small window highlights the surfaces and intricate details, all without narration. The result is a serene, tactile exploration of mini clay artistry enhanced by high-quality ASMR sound design.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 19",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare miniature macarons from scratch, capturing the mixing, piping, baking, and assembling stages with macro close-ups of batter texture, oven glow, and decorated finishing touches in a dollhouse kitchen.",
+          "Video Prompt": "Enter a miniature pastry shop where expert hands whisk delicate batters, carefully pipe full trays of tiny macarons, and transfer them into a compact dollhouse oven. Detailed macro shots reveal bubbly batter texture, gradual rise during baking, and precise decoration afterward with tiny brushes and cream. The soundscape includes soft whisking, oven timer dings, and delicate brush strokes with a warm, inviting ambient light that enhances the cozy atmosphere. No voice-over; just soothing sounds and visuals of tiny baking mastery designed to evoke a rewarding, sensory-rich ASMR experience.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 20",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Style intricate miniature hairdos using micro combs and scissors on doll-sized mannequins, capturing delicate braiding, curling, and trimming processes in rich audio-visual detail.",
+          "Video Prompt": "Experience the precision and care of styling tiny hair on doll-sized mannequin heads, with hands deftly braiding, curling, and trimming miniature locks using authentic tools. Macro cinematography showcases close-up textures of hair strands and comb teeth, accompanied by gentle brushing sounds, soft snips, and the slight snap of clips. The soothing salon background hum completes this immersive ASMR scene where every subtle movement and sound is crafted for sensory delight.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 21",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Sew and stuff miniature pillows with detailed hand stitching and fabric folding within a vintage dollhouse sewing studio, highlighting tactile, layered ASMR cues.",
+          "Video Prompt": "Enter a charming dollhouse sewing room where fingers skillfully guide micro threads through cloth, stitching together tiny pillows with rhythmic needle taps and fabric rustles. The scene captures macro details of delicate folds, precise needle movements, and fabric texture, enriched by ambient sounds of an old sewing machine and faint clock ticks. This quiet, slow-paced process provides a relaxing sensory experience, immersing viewers in the cozy intimacy of miniature craftsmanship.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 22",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble a miniature terrarium with authentic moss, stones, and glass vessels, emphasizing gentle layering, water spritzing, and subtle acoustic textures in natural light.",
+          "Video Prompt": "Watch intimate hand movements as soil is layered precisely, vibrant moss arranged delicately, and tiny stones positioned carefully inside a thimble-sized glass terrarium. Each action is captured with macro focus, highlighting the gentle rustle of moss and light tapping of stones. Subtle water spritz sounds and glass clinks complement the serene, natural lighting, creating a calming, immersive ASMR journey into tiny botanical art. No narration ensures pure sensory engagement throughout the process.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 23",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Decorate meticulous miniature cupcakes for a doll party, from mixing batter to icing and sprinkling, with macro close-ups of texture and ambient bakery sounds.",
+          "Video Prompt": "Follow expert hands mixing droplet-sized batter, piping tiny cupcakes, and carefully placing sprinkles in a cozy miniature bakery setup. The video captures every textured detail: batter bubbling, cupcakes rising, and icing swirling under slow cinematic lighting. Soft sound layers include whisk taps, oven noises, and sugar sifting, creating an immersive, mouthwatering ASMR scene centered on handcrafted tiny treats and the delicate artistry of mini-baking.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 24",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Paint and polish micro-scale toy cars with an artisan’s precision, spotlighting paint application, drying textures, and polishing sounds in a sensory-filled workshop.",
+          "Video Prompt": "Enter a detailed miniature workshop, where skilled hands use fine brushes to apply vivid paint layers to coin-sized toy cars. Macro shots showcase textural contrasts between wet and dry paint, with gentle clinking of tools and rhythmic polishing movements. Ambient workshop noises underscore the tactile detailing phase. This sensory-rich, narration-free scene immerses viewers in the quiet artistry of miniature automotive finishing.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 25",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble a miniature breakfast plate with perfectly prepared tiny pancakes, bacon, and fruit slices, focusing on rich tactile sounds and warm kitchen ambiance.",
+          "Video Prompt": "Delight in a miniature morning scene where hands layer thimble-sized pancakes, crispy bacon strips, and delicately sliced fruit onto a tiny plate. The soundtrack includes sizzling bacon, syrup drizzling, and the quiet clatter of tiny utensils. Cinematic macro shots combine with warm, natural light to create a cozy, sensory-rich ASMR breakfast ritual, executed entirely without narration to highlight pure culinary immersion.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 26",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Fold intricate miniature origami including cranes, flowers, and geometric shapes, guided by crisp paper sounds and serene studio lighting for ASMR effect.",
+          "Video Prompt": "Observe expert fingers crafting delicate paper cranes, tulips, and complex geometric shapes from tiny sheets. Crisp folding sounds and gentle finger taps are amplified through macro cinematography. The calming studio environment, flooded with soft natural light, fosters a meditative ASMR experience focusing solely on the silent artistry of miniature origami creation.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 27",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Mix and pour visually stunning miniature mocktails and fruit punches, emphasizing pouring layer effects and garnish placement with delicate liquid and ice sounds.",
+          "Video Prompt": "Step into a sleek micro bar crafting vibrant fruit punches and mocktails in coin-sized glasses. Detailed shots reveal sparkling soda fizz, ice cube clinks, and careful garnishing with fruit slices and tiny umbrellas under warm lighting. Rich audio captures every liquid swirl and pour, creating a relaxing, visually captivating cocktail prep ASMR scene without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 28",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Sculpt lifelike miniature animal figurines from soft clay, detailing tactile molding, tool scraping, and slow painting in a cozy workshop atmosphere.",
+          "Video Prompt": "Immerse yourself in the creation of tiny animal figures sculpted from soft clay. Real hands press, carve, and shape with minute tools while close-up camera angles focus on minute textures and movements. Gentle scraping and brushing sounds meld with soft studio background sounds, enhancing this quiet, sensory craft process designed to elicit deep ASMR satisfaction without voiceover interruption.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 29",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare miniature macarons with macro close-ups of mixing, piping, baking, and decorating in a dollhouse kitchen, capturing oven sounds and batter textures.",
+          "Video Prompt": "Explore a tiny pastry shop where expert hands whisk delicate macaron batters, pipe droplet-sized shells, and bake them in a dollhouse oven. The video highlights airy textures rising in the oven and careful decorating with tiny brushes. Sounds include whisk tick, oven timer dings, and soft frosting brushes, all recorded in warm, inviting light for a fully immersive, narration-free ASMR baking experience.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 30",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Build intricate miniature clock mechanisms using authentic tiny gears and tools, emphasizing the delicate clicking and whirring sounds in a focused workshop setting.",
+          "Video Prompt": "Delve into the precise construction of micro clockworks, where expert hands manipulate miniature gears, screws, and springs. Macro shots capture the tiniest clicks, turns, and delicate assembly movements. Layered soundscapes feature gentle ticking, tool slips, and soft metal taps, enveloped by quiet workshop ambiance. This highly detailed sensory experience avoids any narration to maintain focus on the mesmerizing mechanical ASMR.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 31",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Create a micro painting studio set, arranging tiny brushes, paints, and canvases with detailed hand placements and soft art material sounds under natural light.",
+          "Video Prompt": "Witness the setup of a miniature art studio where hands meticulously place coin-sized brushes, tubes of paint, and small canvases. Macro focus on textures of bristles, paint tubes, and canvas reveals rich sound layers including gentle brush tapping, paint squeezing, and faint swishes. Bathed in natural light, this silent ASMR sequence invites viewers into a calm, tactile creative environment.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 32",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Sculpt intricate miniature polymer clay jewelry pieces with various shaping and detailing techniques while capturing fine scraping and blending sounds in a crafting studio.",
+          "Video Prompt": "Enter a micro crafting space where skilled hands mold and texture small polymer clay beads and pendants using precise tools. Ultra-close shots reveal delicate scraping, smoothing, and blending actions. Surround audio captures scraping tools and soft clay manipulation sounds paired with a serene background hum. The video is focused purely on hands-on activity without narration for maximum ASMR immersion.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 33",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble micro birdhouses and garden accessories with careful detail to miniature wood textures, nails, and paint, emphasizing tapping, hammering, and brush sounds.",
+          "Video Prompt": "Experience the build of tiny wooden birdhouses, complete with miniature nails, screws, and painted details. Macro focal points reveal the texture of wood grains, precise finger placement, and soft hammer taps. Layered sounds include subtle brush strokes and tool clicks supported by ambient outdoor drilling sounds, creating a richly textured, narration-free DIY ASMR experience.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 34",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare miniature tea ceremonies with tiny teapots, cups, and pouring actions, focusing on delicate liquid sounds and serene ambient background for ASMR peace.",
+          "Video Prompt": "Step into a micro tea room where real hands pour steaming tea from thimble-sized pots into coin-sized cups. Macro detail reveals gentle steam, liquid ripple, and soft cup clink sounds. The quiet room ambiance features faint paper rustles and soft breathing, creating a tranquil, immersive ASMR tea ceremony evocative of classic traditions, without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 35",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Bake coin-sized chocolate truffles, capturing every stage from smooth chocolate melting to rolling and dusting in rich macro detail with satisfying soft tactile sounds.",
+          "Video Prompt": "Watch as hands melt, stir, and form tiny chocolate truffles, coating them with cocoa powder. Cinematic macro shots emphasize glossy melts, powder dusting, and slow rolling movements. Surrounding audio emphasizes the soft snap of chocolate, delicate powder fall, and gentle hand motions. Warm kitchen lighting enhances this intimate, silent baking ASMR journey focused on tiny sweets crafted to perfection.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 36",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Create miniature flower arrangements using tiny blossoms, leaves, and twine to construct detailed bouquets, focusing on the subtle rustle and snip sounds in natural lighting.",
+          "Video Prompt": "Delight in the craft of assembling diminutive bouquets from real tiny flowers and leaves. Hands clip, thread, and wrap with miniature twine, capturing soft scissors snips, leaf rustles, and fabric wrap sounds in crisp macro detail. Natural sunlight filters through petals, enhancing the visual and auditory serenity of the floral ASMR composition. No narration maintains pure sensory engagement.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 37",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble micro scale leather craft projects, focusing on tactile cutting, stitching, and polishing sounds to showcase craftsmanship in a quiet workshop environment.",
+          "Video Prompt": "Explore the meticulous process of crafting tiny leather goods, where fingers cut, punch holes, stitch, and polish coin-sized leather pieces. Macro shots capture rugged textures, smooth edges, and subtle hand movements. The layered soundscape features soft cuts, punch impacts, thread pulls, and cloth polishing, supported by a calm workshop ambience. This quiet, focused video highlights fine craftsmanship without any spoken narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 38",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Form miniature clay food models, including sushi, cupcakes, and pizza slices, emphasizing detailed shaping, color blending, and textural sound layers in a bright studio.",
+          "Video Prompt": "Observe the art of creating lifelike miniature food from soft clay, shaping sushi rolls, cupcakes, and pizza slices with exquisite detail. Macro views capture every crease, paint dab, and texture blend while soft sculpting and brush brushing noises create an immersive culinary ASMR environment. Warm daylight floods the scene, and no narration allows full focus on hands-on manipulation and sound.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 39",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Carve tiny miniature Halloween pumpkins with realistic details, capturing every slicing, scooping, and scraping sound in a cozy, autumn-themed workshop light setting.",
+          "Video Prompt": "Enter an autumn studio glowing with warm golden light as hands carve tiny pumpkins with micro tools. Macro shots reveal every crisp slice, pulp scoop, and texture scrape while gentle workshop ambience fills the background. Layers of carving tool taps and crisp autumn leaf rustles complement an immersive Halloween ASMR experience, fully sound-focused and free of narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 40",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble and paint miniature dollhouse furniture sets with attention to delicate brush strokes, assembling taps, and textured finishes in slow cinematic detail.",
+          "Video Prompt": "Experience the intimate creation of tiny dollhouse furniture as an artisan’s hands carefully paint and assemble miniature chairs, tables, and wardrobes. Macro lenses capture close brush strokes, the soft tap of tiny nails, and detailed surface textures under natural light. Ambient workshop sounds enrich the scene as brushes swipe and pieces click together. This narration-free sequence immerses viewers in the meticulous craftsmanship of dollhouse furniture making, highlighting all sensory layers.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 41",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare miniature gourmet cheeseboards, cutting and arranging small cheese chunks, nuts, and fruit in a tiny elegant serving tray, emphasizing crisp slicing and placement sounds.",
+          "Video Prompt": "Watch hands carefully slice coin-sized pieces of gourmet cheese, arrange nuts and fruits on a tiny wooden board, and add decorative sprigs under warm dining room light. Macro close-ups shimmer on intricate textures and knife movements, with crisp cutting sounds layered against subtle table clinks and soft ambient chatter, all without narration. The intimate and tactile ASMR sequence invites viewers into a detailed culinary miniature experience.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 42",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Construct a tiny bookbinding workshop, stitching and gluing coin-sized book pages with authentic tactile sound layers of fabric, paper, and glue in a vintage setting.",
+          "Video Prompt": "Observe the careful hand-stitching of miniature book pages followed by the precise gluing and binding of covers in a quaint old-world workshop. Macro focus reveals thread pulling, paper bending, and soft glue brush strokes, enhanced by tactile echoes of fabric swipes and distant tool sounds. Cinematic lighting accentuates textures and colors, offering a serene, voice-free ASMR invitation into the art of micro bookbinding.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 43",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Create miniature glass bead jewelry, focusing on delicate stringing, bead rolling, and the shimmering sound of glass against glass in a bright crafting studio.",
+          "Video Prompt": "Follow expert hands stringing tiny colored glass beads into intricate bracelets and necklaces. Macro shots bring attention to the shimmering bead surface and soft rolling sounds as beads click together. The sparkling light reflections and focused soundscape create a soothing, sensory-rich ASMR experience without any spoken word, drawing viewers into the micro-scale crafting world.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 44",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Bake miniature pies with coin-sized crusts and fillings, capturing dough rolling, filling placement, and oven sounds in an authentic dollhouse kitchen.",
+          "Video Prompt": "Step into a tiny dollhouse kitchen where skilled hands roll miniature pie dough, fill tiny crust shells with colorful fruit, and carefully place them into a miniature oven. Detailed close-ups capture flour dust, soft dough textures, and the gentle sigh of the oven timer. Complemented by soft kitchen ambiance, the scene invites viewers into a detailed baking ASMR experience entirely free of narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 45",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble micro terrarium scenes with tiny figurines, stones, and moss, capturing gentle placement and subtle ambient forest sounds for sensory immersion.",
+          "Video Prompt": "Enter a tiny botanical world with hands arranging miniature trees, stones, and tiny animal figurines inside a glass terrarium. Macro shots highlight careful touches, soft moss rustling, and faint water spritzing. Forest ambiance blends with natural sunlight, delivering a calming ASMR scene focused on the tranquil construction of a miniature natural habitat, narratively silent to maximize sensory focus.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 46",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Craft tiny origami lanterns and flowers with precise folding and tapping sounds in a soft-lit, zen-inspired creative space.",
+          "Video Prompt": "Experience the meditative process of folding intricate origami in a softly lit studio. Close-up views capture precise finger movements, crisp paper creases, and gentle tapping sounds as tiny lanterns and flowers come to shape. Ambient light and serene background silence enhance the sensory experience, inviting viewers into a quiet, tactile ASMR journey without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 47",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Pour miniature coffee brews using tiny espresso cups and coffee tools, emphasizing steam sounds, liquid flow, and subtle café background noise.",
+          "Video Prompt": "Watch the preparation of miniature espresso drinks, from grinding bean-sized coffee to pouring steaming liquid into delicate small cups. Macro-focused shots display exquisite detail in coffee crema and miniature steam swirls. Layered sound design features pouring, bubbling, and soft tapping ambiance, evoking the cozy warmth of a micro café experience without any narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 48",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Paint detailed miniature landscapes on coin-sized canvases, focusing on brush strokes, color blending, and subtle paint mixing sounds in an artist’s studio.",
+          "Video Prompt": "Immerse in the slow, focused process of painting tiny landscapes with vibrant detail. Macro shots highlight subtle brush textures, gradual color blending, and quiet brush strokes. Background studio ambiance fills the frame with soft echoes of paint mixing and gentle tool taps, creating a deep sensory engagement that thrives in silence, perfect for ASMR viewers.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 49",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Craft tiny baked goods assortments including cookies, muffins, and breads exceeding realistic textural detail with baking-related sounds in dollhouse ovens.",
+          "Video Prompt": "Observe hands forming miniature baked goods with flour dusting, dough kneading, and baking rimmed trays in a dollhouse-style kitchen. Macro cameras capture crust evolving in heat, soft clink of trays, and gentle oven hums. The silent but sonically rich environment emphasizes tactile baking sounds, delivering an intimate ASMR session centered on micro pastry creation.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 50",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble micro model kitchens with detailed mini utensils, appliances, and food props, emphasizing sliding, clinking, and ambient cooking sounds for immersive realism.",
+          "Video Prompt": "Witness miniature kitchen setups as tiny utensils are placed carefully alongside micro appliances and faux food props. Macro cinematography showcases every tiny clink, slide, and click, underscored by gentle cooking noises like boiling and frying pans. Natural lighting and slow camera moves provide a realistic, narration-free ASMR ambiance celebrating miniature culinary craftsmanship.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 51",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Fold and decorate miniature fabric dolls wearing micro clothes, focusing on sewing, fabric noise, and arranging textures in a cozy artisan space.",
+          "Video Prompt": "Step into a little artist’s workspace where fingers fold small pieces of fabric, sew delicate stitches, and dress tiny dolls. Macro view emphasizes thread pull, fabric swish, and hand tap sounds while costumes take shape. Ambient workshop sounds frame the hands-on process creating a peaceful, tactile ASMR vignette without spoken commentary.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 52",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Carve and paint micro wooden spoons and utensils emphasizing scraping, sanding, and brush strokes within a serene woodworking setting.",
+          "Video Prompt": "Enjoy intimate scenes of hands carving small wooden utensils using fine tools, sanding surfaces smooth, then layering paint finish. Macro close-ups accentuate wood grain textures and crisp tool sounds layered with quiet workshop ambiance. The silent focus on these delicate processes invites ASMR enthusiasts into the soothing rhythm of micro woodworking.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 53",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Mix and layer miniature fruit parfaits in thimble-sized glasses, emphasizing gentle liquid and fruit layering sounds with soft natural light ambiance.",
+          "Video Prompt": "Dive into the creation of colorful layers of fruit, yogurt, and granola in tiny glasses. Macro shots capture every spoonful, drip, and splash as parfaits form with high detail. Ambient natural light highlights the textures and layered sounds of mixing without narration, creating a calm sensory experience perfect for ASMR relaxation.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 54",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble miniature spice jars and blend tiny herbs with soft shaking and grinding sounds, detailed hand placements, and natural kitchen light.",
+          "Video Prompt": "Explore a micro spice workshop where tiny jars are filled and closed with precision. Hands shake and grind miniature herbs while macro focus details vibrant spices and soft tool taps. The calming kitchen light and absence of narration amplify the immersive ASMR feeling of a quiet culinary craft.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 55",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Sculpt living miniature clay succulents emphasizing gentle shaping, texturing, and slow color application in a softly lit botanical setting.",
+          "Video Prompt": "Observe skilled hands sculpting micro clay succulents, with soft press and scrape sounds amplified by close-up shots. Each plant form is painted delicately, layered with color to enhance realism. Natural light and quiet studio ambiance support this tranquil, fully tactile ASMR garden creation scene without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 56",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare and plate miniature sushi assortments focusing on rice shaping, fish slicing, and plating sounds with cinematic macro cinematography.",
+          "Video Prompt": "Experience a micro sushi chef’s calm precision as they handle tiny rice balls, slice miniature fish pieces, and place final garnishes. Detailed visual and auditory cues capture knife sliding, rice pressing, and soft plate taps, bathed in natural light. This silent culinary art performance provides a richly detailed ASMR intimacy for food lovers.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 57",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Build and paint coin-sized model cars with detailed attention to small brush strokes, sanding, and polishing sounds in a mini workshop environment.",
+          "Video Prompt": "Enter a tiny automotive workshop where hands paint and polish miniature model cars with precision. Macro camera work captures brush stroking, sanding, and cloth buffing sounds enhanced by workshop ambiance. The scene is designed to immerse viewers in the quiet artistry of miniature car detailing without narration for pure sensory focus.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 58",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Craft micro plush toys from start to finish, highlighting sewing, stuffing, and fabric manipulation sounds paired with close-up shots and cozy lighting.",
+          "Video Prompt": "Watch the full creation of tiny plush toys as hands sew pieces together, stuff filling gently, and finish details in soft studio light. Every stitch, fabric fold, and stuffing plump is captured in macro detail with layered tactile sound design. The quiet crafting process creates a warm, relaxing ASMR experience devoted to plush toy artistry.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 59",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Bake coin-sized muffins and decorate with edible miniature toppings, capturing batter mixing, oven sounds, and icing application in slow-paced detail.",
+          "Video Prompt": "Delve into a miniature bakery scene where droplet-sized muffin batter is mixed, piped, and baked in a compact oven. Macro glimpses reveal rising batter, oven timer sounds, and delicate topping applications. Layered kitchen noises and soft lighting create a mouthwatering ASMR environment focused on tiny, handcrafted pastries without any spoken word.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 60",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Craft different pieces of miniature jewelry in the same artisan workshop setup, including rings, bracelets, and necklaces—each showcasing unique beadwork, polishing, and assembly textures.",
+          "Video Prompt": "First-person POV macro-cinematic jewelry crafting scene titled “Micro Metalsmith.” A real human uses tiny jeweler’s tools and miniature gemstones on a small workbench the size of a tabletop. Ultra-realistic shallow-depth macro camera view—soft polishing cloth sounds, delicate bead stringing, and metallic tool taps echo gently. Real hands carefully assemble thumb-sized rings, bracelets, and necklaces with precise soldering and polishing motions. Warm natural light, ambient workshop sounds, and handheld slow micro-lens movement create a cozy, focused miniature environment. No narration—just immersive first-person craftsmanship.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 61",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare assorted miniature sushi rolls and sashimi using the same compact sushi prep station—highlighting knife slicing, rice molding, and meticulous plating sounds.",
+          "Video Prompt": "First-person POV macro-cinematic sushi-making scene titled “Tiny Sushi Chef.” A real human crafts bite-sized rice balls and slices miniature fish with a tiny knife on a compact kitchen setup. Ultra-realistic shallow-depth macro view—gentle slicing, sticky rice pressing, and soft chopstick arranging sounds fill the scene. Steam lightly rises from a nearby pot as delicate hands plate exquisite coin-sized sushi rolls. Natural daylight filters through the kitchen window, with slow handheld micro-lens movements creating cinematic depth in a quiet, immersive miniature culinary world. No narration, only sensory realism.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 62",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Make different styles of miniature cocktails using the same tiny bar setup, showcasing pouring, shaking, and garnishing textures with vibrant color contrasts.",
+          "Video Prompt": "First-person POV macro-cinematic cocktail mixing scene titled “Micro Mixologist.” A real human shakes and pours tiny colorful cocktails using miniature bar tools—tiny glass shakers, droplet-sized stirrers, and delicate garnishes. Ultra-close shallow focus captures fizzy pours, ice clinks, and subtle zest sprays in warm cozy bar lighting. Macro depth of field and slow handheld camera movements emphasize the precise, intentional mixing and layering of miniature drinks with soft ambient bar sounds. No narration, just immersive sensory cocktail artistry.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 63",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Carve and finish miniature wooden sculptures in the same workshop setting, demonstrating fine chiseling, sanding, and detailed painting.",
+          "Video Prompt": "First-person POV macro-cinematic woodworking scene titled “Miniature Woodcarver.” A real human hand-carves tiny animal and figure sculptures from matchstick-sized wood blocks using micro chisels and sanders. Ultra-realistic shallow-depth macro view—wood shavings curl, careful sanding dust clouds appear, and brushes gently apply paint. The workshop is softly lit with natural light filtering through a window, and tactile sanding, carving taps, and brush bristles create layered ASMR sounds. Gentle handheld micro-lens camera motion deepens cinematic immersion. No narration; solely hands-on sensory woodworking experience.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 64",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Form and paint miniature clay pottery pieces on the same small wheel setup—each piece showing intricate shaping and glazing textures.",
+          "Video Prompt": "First-person POV macro-cinematic pottery-making scene titled “Micro Potter.” A real human mold, spin, and paint micro vases and bowls on a tiny potter’s wheel the size of a small table. Ultra-realistic shallow-depth macro lens view captures the wet clay squish, slow wheel turning, and detailed brush application of glaze. Ambient sounds include faint wheel hum, finger smudging, and soft brush swishes in warm studio light. The slow handheld camera movement highlights the tactile delicate motions in a serene miniature pottery studio. No narration, just immersive tactile pottery ASMR.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 65",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Style intricate miniature hairstyles on doll-scale mannequins in the same cozy salon setup, focusing on braiding, trimming, and curling textures.",
+          "Video Prompt": "First-person POV macro-cinematic hairstyling scene titled “Miniature Salon.” A real human uses tiny combs, scissors, and curling tongs on doll-sized mannequin heads in a compact salon workspace. Ultra-realistic shallow-depth macro camera captures slow finger movements detangling, trimming curls, and applying gentle styling sprays. Soft snips, brush strokes, and clip snaps layer with ambient gentle salon background noise. Warm lighting and slow, smooth camera shifts create a cozy cinematic feel. No narration, just hands-on sensory hairstyling immersion.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 66",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Sew and stuff miniature pillows and soft toys in the same vintage dollhouse sewing room, capturing fabric textures and stitching sounds.",
+          "Video Prompt": "First-person POV macro-cinematic sewing scene titled “Micro Sewist.” A real human hand-methodically stitches and stuffs tiny pillows and toys using micro needles and threads on a dollhouse sewing table. Ultra-close shallow-depth macro view highlights fabric folds, needle passing, and stuffing compression. Soft rhythmic needle taps, fabric rustling, and distant sewing machine hums are layered with cozy warm workspace light. Slow handheld micro-lens camera movement accentuates the tactile motions in a peaceful miniature crafting world. No narration, just immersive handwork ASMR.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 67",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Decorate miniature cupcakes and pastries in a small dollhouse bakery setup, focusing on icing swirls, sprinkle placement, and baking sounds.",
+          "Video Prompt": "First-person POV macro-cinematic baking scene titled “Tiny Pastry Chef.” A real human uses miniature piping bags, sprinkle jars, and a small oven to decorate tiny cupcakes on a dollhouse countertop. Ultra-realistic shallow-depth macro zoom shows smooth icing swirls, sprinkle tapping, and fading oven warmth. The ambient sound includes delicate mixing, oven beeps, and gentle countertop taps. Warm cozy kitchen light floods the scene, coupled with handheld slow pan motions that elevate sensory ASMR immersion. No narration, just detailed baking craft sounds and visuals.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 68",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble miniature dollhouse furniture sets in a small workshop environment, capturing painting, hammering, and wood grain textures.",
+          "Video Prompt": "First-person POV macro-cinematic carpentry scene titled “Micro Carpenter.” A real human hand assembles tiny chairs, tables, and cabinets, using small brushes, nails, and sanding tools on a bench the size of a desktop. The ultra-close shallow macro view captures tooth brush strokes, gentle hammer taps, and smooth sanding grit. Soft workshop sounds and the natural spill of daylight combine with subtle handheld camera movements to create a soothing sensory-focused miniature workshop atmosphere. No narration, just immersive craftsmanship ASMR.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 69",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Create miniature botanical terrariums with moss, pebbles, and tiny figurines on the same small glass container setup.",
+          "Video Prompt": "First-person POV macro-cinematic terrarium building scene titled “Micro Botanist.” A real human hand carefully layers soil, arranges miniature moss, places tiny decorative stones, and adds small animal figurines inside a small glass terrarium. Ultra-realistic shallow-depth macro focus captures soft rustles, stone taps, and light mist sprays. The workshop is bathed in natural daylight, blending gentle ambient nature sounds with slow camera pans, providing a calming, immersive miniature botanical ASMR environment. No narration; purely authentic tactile and visual sensory immersion.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 70",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Create different miniature breakfast dishes using the same tiny kitchen setup—pancakes, waffles, and scrambled eggs—with each offering distinct sizzle and pouring sounds.",
+          "Video Prompt": "First-person POV macro-cinematic cooking scene titled “Mini Breakfast Chef.” A real human prepares miniature breakfast dishes on a tabletop-sized stove, using tiny utensils and real ingredients sized for a miniature kitchen. Ultra-realistic shallow-depth macro camera captures delicate batter pouring, sizzling sounds of frying eggs, and gentle flipping of pancakes. Natural morning light floods the cozy kitchen environment while soft ambient cooking sounds fill the background. Handheld micro-lens movement and cinematic depth create an immersive first-person ASMR experience with no narration—just pure sensory cooking realism.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 71",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Brew a variety of miniature teas—green, black, and herbal—in the same tiny teapot setup, capturing unique steeping bubbles, pouring sounds, and steam curls.",
+          "Video Prompt": "First-person POV macro-cinematic tea brewing scene titled “Tiny Tea Ceremony.” A real human uses miniature teapots and cups on a small table, steeping different types of tea with meticulous care. Ultra-realistic shallow-depth macro camera shows bubbling water, gentle steam curls rising, and tea pouring into tiny cups with barely audible clinks. Soft, slow handheld camera work complements the natural lighting and ambient kitchen sounds, delivering a peaceful, delicate tea-making ASMR atmosphere. No narration—just detailed sensory immersion.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 72",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Bake various miniature breads—baguettes, rolls, and loaves—using the same small oven setup, focusing on dough kneading, rising, and crust cracking textures.",
+          "Video Prompt": "First-person POV macro-cinematic baking scene titled “Micro Baker’s Oven.” A real human kneads, shapes, and places miniature dough pieces into a tiny oven housed on a miniature wooden counter. The ultra-realistic shallow-depth macro camera captures tactile hand kneading, dough rising bubbles, and the crisp sound of bread crust cracking as baked goods cool. Natural warm kitchen light and ambient baking sounds accompany slow handheld camera movement, creating a sensory-rich miniature baking ASMR scene with no narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 73",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Paint different miniature landscapes on the same small canvas setup—mountains, forests, and lakes—showcasing brush strokes, color blending, and texture focus.",
+          "Video Prompt": "First-person POV macro-cinematic painting scene titled “Miniature Landscape Painter.” A real human creates miniature landscape paintings on small canvases using fine brushes and vibrant paints. The ultra-close macro camera captures detailed brush strokes, subtle color blending, and texture layering with focused slow motions. Soft ambient studio noises blend with natural window light and handheld micro-lens work to evoke a calm, immersive painting atmosphere. No narration, only detailed tactile and visual ASMR.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 74",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble various miniature dollhouse rooms—kitchen, living room, and bedroom—using the same micro furniture and decor pieces, highlighting detailed placements and textures.",
+          "Video Prompt": "First-person POV macro-cinematic miniature dollhouse setup titled “Tiny Interiors.” A real human arranges micro furniture and accessories in dollhouse rooms on a small tabletop. The ultra-realistic shallow-depth macro camera reveals close texture details, delicate placement taps, and soft fabric rustles. A quiet ambient home background and natural sunlight contribute to slow handheld camera movements that emphasize the cozy tactile sensation of decorating tiny spaces. No narration, just sensory immersion in miniature home decor.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 75",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Decorate different miniature cupcakes using the same small bakery setup—icing roses, sprinkle patterns, and edible toppers—focusing on detailed hand piping and tapping sounds.",
+          "Video Prompt": "First-person POV macro-cinematic cupcake decoration scene titled “Mini Bakery Art.” A real human uses miniature piping bags and sprinkle jars on a tiny bakery counter to decorate cupcakes with intricate designs. Ultra-realistic shallow-depth camera views capture spoon drizzle, soft swirl sounds, and tiny sprinkle taps. Ambient bakery noises combine with warm natural lighting and smooth micro-lens handheld motion to create an inviting tactile ASMR experience. No narration, only sensory-focused baking artistry.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 76",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Craft various miniature pet toys—balls, chew toys, and tunnels—using the same tiny workshop setup, emphasizing crafting tool sounds and textural details.",
+          "Video Prompt": "First-person POV macro-cinematic miniature pet toy scene titled “Tiny Toy Maker.” A real human uses craft tools to create tiny pet toys with detailed shaping, sewing, and decorating. The ultra-realistic shallow-depth macro lens captures crisp tool taps, soft fabric squeaks, and detailed textures under natural light. Ambient workshop sounds accompany slow handheld camera movements, delivering a hands-on sensory miniature crafting ASMR with no narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 77",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble different miniature coffee drinks using the same micro café setup—latte, cappuccino foam art, and cold brew—highlighting pouring, frothing, and tapping sounds.",
+          "Video Prompt": "First-person POV macro-cinematic coffee-making scene titled “Micro Barista.” A real human brews detailed miniature coffee drinks using tiny tools and cups on a handcrafted table. The ultra-realistic shallow-depth macro camera captures delicate milk frothing, coffee pouring, and light tapping of spoons against cups. Warm morning light and soft café ambient noises complement handheld slow camera movements, creating an intimate sensory coffee experience. No narration—just pure ASMR coffee realism.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 78",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Sculpt and paint different miniature animal figures—birds, rabbits, foxes—on the same small workbench setup, emphasizing fine detail brushes and textural sounds.",
+          "Video Prompt": "First-person POV macro-cinematic clay sculpting scene titled “Miniature Animal Artist.” A real human sculpts and delicately paints tiny animal figurines using fine tools on a small work surface. Ultra-realistic shallow-depth macro camera catches soft scraping, painting brush strokes, and smoothing details. Ambient workshop hum and gentle tool sounds mix with warm, natural window light and slow micro-lens movements, delivering relaxing tactile ASMR without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 79",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare assorted miniature desserts—tiny tarts, mousse cups, and jelly sweets—using the same micro dessert station, focusing on layering textures, pouring, and spoon tapping sounds.",
+          "Video Prompt": "First-person POV macro-cinematic miniature dessert preparation titled “Tiny Sweet Treats.” A real human layers ingredients into small dessert cups, pipes mousse, and places jelly sweets with perfect care on a tiny counter. Ultra-realistic shallow-depth macro shots feature delicate spoon tapping, smooth pouring, and subtle layering sounds. Soft kitchen ambient noise and warm studio light accompany the slow, handheld micro-lens movements, creating a cozy sensory-rich dessert ASMR with no narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 80",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare a variety of miniature ice cream sundaes in the same tiny kitchen setup — focusing on scooping, topping, and syrup pouring sounds with colorful, detailed textures.",
+          "Video Prompt": "First-person POV macro-cinematic ice cream making scene titled “Micro Sundae Master.” A real human scoops different flavors of miniature ice cream into micro bowls, adds toppings like tiny nuts and chocolate chips, and carefully pours syrup. The ultra-realistic shallow-depth macro camera highlights smooth scooping motions, sticky syrup drips, and delicate crunch sounds. Warm kitchen lighting and gentle ambient textures complement slow handheld micro-lens movements. No narration, just immersive first-person dessert preparation.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 81",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Paint miniature bottles and vials with intricate, delicate brush strokes and detailed labeling on the same small work table setup.",
+          "Video Prompt": "First-person POV macro-cinematic painting scene titled “Miniature Apothecary.” A real human hand carefully paints tiny glass bottles and vials, delicately adding label details with fine brushes. Ultra-close shallow-depth macro shots capture brush bristles, reflective glass surfaces, and slow, precise strokes. Subtle ambient workspace sounds blend with warm natural light and smooth micro-lens motion, creating a soothing visual and auditory ASMR experience. No narration for focused sensory immersion.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 82",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble miniature embroidery hoops showcasing different stitching patterns using the same crafting table, emphasizing thread pulling, needle tapping, and fabric textures.",
+          "Video Prompt": "First-person POV macro-cinematic embroidery scene titled “Micro Stitcher.” A real human needle guides thread through tiny fabric circles held in miniature hoops. Ultra-realistic macro camera captures rhythmic thread pulling, soft needle taps on fabric, and the subtle shift of cloth tension. Warm studio lighting and gentle background hum combine with slow handheld camera moves to create an immersive and peaceful tactile ASMR experience without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 83",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Cook several miniature soups using the same small pot setup—clear broth, cream-based, and chunky vegetable soups—focusing on stirring, pouring, and simmering sounds.",
+          "Video Prompt": "First-person POV macro-cinematic miniature soup preparation titled “Tiny Soup Maker.” A real human stirs, ladles, and pours different miniature soups in a tiny pot warmed over a small stovetop. Ultra-close macro lens captures bubbling broth, chunky vegetable stirring, and soft ladle tapping against miniature bowl rims. Ambient kitchen noises and natural light accentuate handheld slow-motion shots, immersing viewers in rich sensory ASMR soup crafting without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 84",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Decorate miniature ceramic mugs with specialty coffees, latte art, and foam designs in the same cozy small café setup, highlighting pouring, frothing, and art brush sounds.",
+          "Video Prompt": "First-person POV macro-cinematic coffee decorating scene titled “Micro Latte Artist.” A real human carefully pours frothed milk into miniature ceramic mugs, creates foam shapes with fine tools, and adds delicate paint-strokes to the porcelain cups. Macro shallow focus reveals steam swirling, gentle pouring sounds, and detailed brush strokes. Warm café lighting and ambient soft chatter complete immersive handheld micro-lens visuals. The video excludes narration, offering only sensory coffee art realism.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 85",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Stitch micro quilts for dollhouses using the same small sewing table, focusing on patch placement, needle pulling, and fabric texture layering.",
+          "Video Prompt": "First-person POV macro-cinematic sewing scene titled “Tiny Quilt Maker.” Real hands carefully place miniature fabric patches together, methodically stitch seams, and layer fabric squares with precision. Ultra-realistic shallow-depth macro views capture rhythmic needle pulls, fabric texture close-ups, and gentle tugging sounds. A softly lit workshop background complements slow handheld camera movements to create tactile, immersive ASMR without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 86",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Create miniature realistic flower bouquets using tiny fresh blossoms and foliage, focusing on clipping, arranging, and tying sounds in the same small workspace.",
+          "Video Prompt": "First-person POV macro-cinematic floral arrangement scene titled “Micro Florist.” Hands delicately clip tiny flower stems, arrange bouquets with precision, and tie miniature ribbons under warm studio lighting. Close shallow macro lens captures soft clipping snips, gentle rustling leaves, and subtle tying motions. Ambient natural sounds fill the quiet workspace while handheld micro-lens camera gently explores the sensory mini bouquet assembly. No narration, purely hands-on visual and auditory ASMR.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 87",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble miniature vintage typewriters and write tiny letters in the same detailed workshop, emphasizing key presses, paper movement, and mechanical clicks.",
+          "Video Prompt": "First-person POV macro-cinematic vintage desk scene titled “Micro Typist.” A real human presses miniature typewriter keys with care, moves tiny paper sheets, and aligns documents on a small wooden desk. Ultra-realistic shallow macro camera captures mechanical clicks, paper shuffles, and finger taps. The workshop fills with soft tool and distant office noises, and the slow handheld micro-lens captures the intimate tactile working environment without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 88",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Bake assorted miniature pies with detailed crust designs and fillings using the same dollhouse kitchen, focusing on dough handling, filling pours, and oven sounds.",
+          "Video Prompt": "First-person POV macro-cinematic baking scene titled “Tiny Pie Baker.” Real hands roll and shape miniature dough pieces, carefully pour fruit fillings, and place pies into a small dollhouse oven. Macro lens captures shiny glazing, soft dough textures, and warm oven crackles. Natural light and ambient kitchen sounds combine with slow handheld camera panning to produce a cozy, sensory baking ASMR experience, narration free.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 89",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Carve and paint different miniature animal figurines made from wood and clay in the same creative studio, focusing on fine tool usage and paintbrush strokes.",
+          "Video Prompt": "First-person POV macro-cinematic crafting scene titled “Micro Animal Maker.” Skilled hands sculpt small wooden and clay animal figures, carve textures, and apply detailed paint finishes. Ultra-close macro captures tool scraping, sanding dust, and slow brush strokes. Soft natural lighting bathes the workspace, enhancing ambient sounds and gentle handheld camera movements for an immersive sensory ASMR experience without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 90",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Mix and serve miniature layered cocktails in the same tiny bar setup, capturing detailed pouring layers, ice clinks, and garnish placements with atmospheric lighting.",
+          "Video Prompt": "First-person POV macro-cinematic mixology scene titled “Tiny Cocktail Artist.” A real human layers colorful liquids, adds ice cubes, and garnishes tiny glasses in a candlelit miniature bar. Ultra-realistic shallow-depth macro lens highlights liquid flow, ice clinks, and subtle zest spritzes. Warm glowing light and soft bar ambient chatter accompany smooth handheld camera work, immersing viewers in detailed cocktail ASMR without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 91",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Assemble various miniature toolkits and small mechanical parts in the same detailed workshop, focusing on precise placements, clicking, and rustling sounds.",
+          "Video Prompt": "First-person POV macro-cinematic mini workshop scene titled “Micro Mechanic.” Real hands organize tiny screws, bolts, and tools, assembling small devices on a bench. Close macro shots focus on finger placements, tool clicks, and fabric pouch rustles. Ambient workshop murmurs and natural light merge with slow handheld micro-lens movements, creating a peaceful, tactile ASMR experience without voice-over.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 92",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Paint miniature detailed food replicas on tiny plates with vibrant colors and realistic textures, emphasizing brush swishing and color mixing sounds in a controlled studio.",
+          "Video Prompt": "First-person POV macro-cinematic painting scene titled “Miniature Food Artist.” Real hands use fine brushes to paint hyper-realistic food models with layered textures and gradients on small plates. Macro lens captures rich swishing, tip taps, and paint blending sounds. Warm studio lighting and ambient quiet workshop noises blend with slow camera pans, creating a serene sensory painting ASMR, free of narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 93",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Prepare assorted micro fruit salads and smoothies in the same small kitchen with emphasis on chopping, blending, and pouring sounds with bright, fresh visuals.",
+          "Video Prompt": "First-person POV macro-cinematic fruit preparation scene titled “Tiny Fresh Chef.” Real hands chop tiny pieces of fruit, blend miniature smoothies, and carefully pour them into small glasses. Close macro focus reveals juicy textures, blending whirs, and liquid flows. Bright kitchen light and gentle soundscapes of chopping and pouring complement handheld camera work, immersing viewers in refreshing and detailed food ASMR without narration.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      },
+      {
+        "json": {
+          "Video ID": "Video 94",
+          "Status": "create",
+          "Scenes": 3,
+          "Asmr Idea": "Stitch and embroider miniature decorative patches using needlework, thread coloring, and fabric textures in the same cozy crafting corner.",
+          "Video Prompt": "First-person POV macro-cinematic embroidery scene titled “Mini Stitch Artist.” A real human hand uses tiny needles and colored threads to create detailed patches with floral and geometric patterns. Macro camera shows rhythmic needle weaving, thread pulling, and subtle fabric movements. The space is softly lit with warm lighting and filled with quiet crafting sounds from scissors and fabric, without commentary for deep ASMR immersion.",
+          "Aspect Ratio": 0.3861111111111111,
+          "Final Video": "",
+          "Video Title": "",
+          "Video Description": "",
+          "Video Tags": "",
+          "Posting Status": "",
+          "Hashtags": ""
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Sora2 Video Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sora2 Video Create": {
+      "main": [
+        [
+          {
+            "node": "Wait (240 Seconds)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Viddeo": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Videos": {
+      "main": [
+        [
+          {
+            "node": "Wait (100 Seconds)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Final Video": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Download a Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a Video": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a video": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Update a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (240 Seconds)": {
+      "main": [
+        [
+          {
+            "node": "Get Viddeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (100 Seconds)": {
+      "main": [
+        [
+          {
+            "node": "Get Final Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Toronto",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "05c11594-ea75-4d94-a84f-d0ce13247867",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bf33e5d3d06c596e9dfec3d61c991a509d9368372b5a9bbe3bf45f15135016f8"
+  },
+  "id": "mLhQwMu1xwsQJSTF",
+  "tags": [
+    {
+      "updatedAt": "2025-11-04T15:55:20.389Z",
+      "createdAt": "2025-11-04T15:55:20.389Z",
+      "id": "23ufzJn2F72SUNKj",
+      "name": "Video Automation"
+    },
+    {
+      "updatedAt": "2025-11-04T15:55:20.379Z",
+      "createdAt": "2025-11-04T15:55:20.379Z",
+      "id": "gyXx5LEpNTfGuvA0",
+      "name": "AI Automation"
+    }
+  ]
+}
